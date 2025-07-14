@@ -13,7 +13,14 @@ struct TreeNode {
 };
 
 int sumNumbers(TreeNode* root, int topVal){
-    if(!root->left && !root->right) return 10*topVal + root->val;
+    int value = 10*topVal + root->val;
+
+    if(!root->left && !root->right) return value;
+
+    if(!root->left) return sumNumbers(root->right, value);
+    if(!root->right) return sumNumbers(root->left, value);
+
+    return sumNumbers(root->left, value) + sumNumbers(root->right, value);
 }
 
 int sumNumbers(TreeNode* root) {
@@ -22,5 +29,18 @@ int sumNumbers(TreeNode* root) {
 }
 
 int main(){
+    TreeNode* r1 = new TreeNode(1,
+                                new TreeNode(2),
+                                new TreeNode(3));
+
+    TreeNode* r2 = new TreeNode(4,
+                     new TreeNode(0),
+                     new TreeNode(9,
+                       new TreeNode(5),
+                       new TreeNode(1)));
+
+    std::cout << "r1 : " << sumNumbers(r1) << std::endl;
+    std::cout << "r2 : " << sumNumbers(r2) << std::endl;
+
     return 0;
 }
