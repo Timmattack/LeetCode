@@ -34,8 +34,14 @@ void printBT(const TreeNode* node){
 
 
 TreeNode* sortedArrayToBST(vector<int>& nums, int left, int right){
-    if(left < right){
+    if(right - left == 1){
+        return new TreeNode(nums[right],
+                            new TreeNode(nums[left]),
+                            nullptr);
+    }
+    if(left <= right){
         int middle = (left+right)/2;
+        //std::cout << "v:" << nums[middle] << ", l:" << left << ", r:" << right << ", next:(" << left << "," << middle-1 << "),(" << middle+1 << "," << right << ")" << std::endl;
         return new TreeNode(nums[middle],
                             sortedArrayToBST(nums, left, middle-1),
                             sortedArrayToBST(nums, middle+1, right)
@@ -53,7 +59,7 @@ TreeNode* sortedArrayToBST(vector<int>& nums) {
 }
 
 int main(){
-    vector<int> ex1 = {-1, -3, 0, 5, 9};
+    vector<int> ex1 = {-10, -3, 0, 5, 9};
     vector<int> ex2 = {1, 3};
 
     TreeNode* t1 = sortedArrayToBST(ex1);
