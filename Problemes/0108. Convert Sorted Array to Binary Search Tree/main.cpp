@@ -52,8 +52,8 @@ TreeNode* sortedArrayToBST(vector<int>& nums, int left, int right){
 
 TreeNode* sortedArrayToBST(vector<int>& nums) {
     if(nums.size() == 1) return new TreeNode(nums[0]);
-    if(nums.size() == 2) return new TreeNode(nums[0],
-                                               new TreeNode(nums[1]),
+    if(nums.size() == 2) return new TreeNode(nums[1],
+                                               new TreeNode(nums[0]),
                                                nullptr);
     return sortedArrayToBST(nums, 0, nums.size()-1);
 }
