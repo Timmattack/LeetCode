@@ -34,15 +34,67 @@ void printBT(const std::string& prefix, const TreeNode* node, bool isLeft){
         printBT( prefix + (isLeft ? "│   " : "    "), node->right, false);
     }
 }
-
 void printBT(const TreeNode* node){
     printBT("", node, false);
 }
+bool isLeaf(TreeNode* root){
+    if(!root) return false;
+    if(!root->left && !root->right) return true;
+    return false;
+}
 
+void pathSum(TreeNode* root, int targetSum, vector<vector<int>>& paths){
+    if(isLeaf(root)){
+        if(root->val != targetSum)// if the path is invalid, don't make it come back up
+            paths = {};
+        else
+            paths[0].push_back(root->val);// otherwise, just add yourself :)
+
+        return;
+    }
+
+    for(vector<int>& path : paths){
+        path.push_back(root->val);// add yourself in the way
+    }
+
+    vector<vector<int>> Lpaths = paths; // make your childs know
+    vector<vector<int>> Rpaths = Lpaths;
+
+    if(root->left) pathSum(root->left, targetSum - root->val, Lpaths);
+    if(root->right) pathSum(root->right, targetSum - root->val, Rpaths);
+
+    // mix the valids paths
+    for(vector<int>& lp : Lpaths){
+        paths.push_back(lp);
+    }
+    for(vector<int>& rp : Rpaths){
+        paths.push_back(rp);
+    }
+}
 
 vector<vector<int>> pathSum(TreeNode* root, int targetSum) {
-    return {};
+    if(!root) return {};
+    if(isLeaf(root) && root->val == targetSum) return {{root->val}};
+    if(isLeaf(root) && root->val != targetSum) return {};
+
+    vector<vector<int>> Lpaths = {{root->val}};
+    vector<vector<int>> Rpaths = Lpaths;
+
+    if(root->left) pathSum(root->left, targetSum - root->val, Lpaths);
+    if(root->right) pathSum(root->right, targetSum - root->val, Rpaths);
+
+    vector<vector<int>> paths;
+
+    for(vector<int>& lp : Lpaths){
+        paths.push_back(lp);
+    }
+    for(vector<int>& rp : Rpaths){
+        paths.push_back(rp);
+    }
+
+    return paths;
 }
+
 
 
 string stringVec(vector<int> v){
