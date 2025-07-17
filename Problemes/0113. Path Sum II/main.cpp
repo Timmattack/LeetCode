@@ -1,4 +1,5 @@
-#include <iostream>
+#include<iostream>
+#include<vector>
 
 using namespace std;
 
@@ -40,11 +41,69 @@ void printBT(const TreeNode* node){
 
 
 vector<vector<int>> pathSum(TreeNode* root, int targetSum) {
-
+    return {};
 }
 
 
+string stringVec(vector<int> v){
+    if(v.empty()) return "[]";
+    int len = v.size();
+    string msg = "[";
+    msg += to_string(v[0]);
+    for(int i=1; i<len; i++){
+        msg += ", " + to_string(v[i]);
+    }
+    msg += "]";
+
+    return msg;
+}
+void exFormat(int nb, TreeNode* root, int targetSum){
+    cout << "----- -----" << endl;
+    cout << "ex" << nb << ": " << endl;
+    printBT(root);
+    vector<vector<int>> res = pathSum(root, targetSum);
+
+    if(res.empty()){
+        cout << "[]" << endl;
+        return ;
+    }
+
+    string msg = "[\n";
+    int paths = res.size();
+    msg += " "+stringVec(res[0]);
+    for(int i=1; i<paths; i++){
+        msg += " , "+stringVec(res[i]);
+    }
+    msg += "]";
+
+    cout << msg << endl;
+}
 int main(){
+    TreeNode* ex1 = new TreeNode(5,
+                        new TreeNode(4,
+                            new TreeNode(11,
+                                new TreeNode(7),
+                                new TreeNode(2)
+                            ),
+                            nullptr),
+                        new TreeNode(8,
+                            new TreeNode(13),
+                            new TreeNode(4,
+                                new TreeNode(5),
+                                new TreeNode(1)
+                            )
+                        )
+                    );
+    TreeNode* ex2 = new TreeNode(1,
+                        new TreeNode(2),
+                        new TreeNode(3)
+                    );
+
+    TreeNode* ex3 = nullptr;
+
+    exFormat(1, ex1, 22);
+    exFormat(2, ex2, 5);
+    exFormat(3, ex3, 0);
 
     return 0;
 }
