@@ -1,6 +1,7 @@
 #include<iostream>
 #include<vector>
 
+
 using namespace std;
 using Board = vector<vector<char>>;
 void printBoard(Board& B){
@@ -22,21 +23,55 @@ void printBoard(Board& B){
 }
 
 
-bool solveSudoku(Board& board, int line, int col){
-
-}
-
-void solveSudoku(vector<vector<char>>& board) {
-    if(solveSudoku(board, 0, 0)){
-        return;
+// return the next case which contains '.', starting after what is given
+// tenth is the line, unit is column. -1 if end of board is reached
+int nextVoidInBoard(Board& board, int iStart, int jStart){
+    if(iStart == 8){
+        for(int j=jStart; j<9; j++){
+            if(board[8][j] == '.') return 80+j;
+        }
+        return -1;
     }
+
+    for(int i=iStart; i<9 ;i++){
+        for(int j=jStart+1; j<9; j++){
+            if(board[i][j] == '.') return 10*i+j;
+        }
+    }
+
+    return -1;
+
+}
+
+bool solveSudoku(Board& board, int line, int col){
+    return true;
+}
+
+void solveSudoku(Board& board) {
+    if(board[0][0] == '.') solveSudoku(board, 0, 0);
+    int next = nextVoidInBoard(board, 0,0);
+    int jStart = next%10;
+    int iStart = (next - jStart)/10;
+
+    solveSudoku(board, iStart, jStart);
 }
 
 
+void _testNextVoidInBoard(Board& board){
+    int next = nextVoidInBoard(board, 0,0);
+    int jStart = next%10;
+    int iStart = (next - jStart)/10;
+
+    cout << iStart << ", " << jStart << endl;
+}
 int main(){
     Board ex1 = {{'5','3','.','.','7','.','.','.','.'},{'6','.','.','1','9','5','.','.','.'},{'.','9','8','.','.','.','.','6','.'},{'8','.','.','.','6','.','.','.','3'},{'4','.','.','8','.','3','.','.','1'},{'7','.','.','.','2','.','.','.','6'},{'.','6','.','.','.','.','2','8','.'},{'.','.','.','4','1','9','.','.','5'},{'.','.','.','.','8','.','.','7','9'}};
+    /*
+    cout << "Solving ..." << endl;
+    solveSudoku(ex1);
+    */
 
-
+    _testNextVoidInBoard(ex1);
 
     printBoard(ex1);
 
