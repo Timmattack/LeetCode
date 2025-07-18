@@ -24,22 +24,34 @@ void printBoard(Board& B){
 
 
 // return the next case which contains '.', starting after what is given
-// tenth is the line, unit is column. -1 if end of board is reached
-int nextVoidInBoard(Board& board, int iStart, int jStart){
+// give your variables which represent the next i/j
+void nextVoidInBoard(Board& board, int iStart, int jStart, int &iNext, int &jNext){
     if(iStart == 8){
         for(int j=jStart; j<9; j++){
-            if(board[8][j] == '.') return 80+j;
+            if(board[8][j] == '.'){
+                iNext = 8;
+                jNext = j;
+                return ;
+            }
         }
-        return -1;
+        iNext = -1;
+        jNext = -1;
+        return ;
     }
 
     for(int i=iStart; i<9 ;i++){
         for(int j=jStart+1; j<9; j++){
-            if(board[i][j] == '.') return 10*i+j;
+            if(board[i][j] == '.'){
+                iNext = i;
+                jNext = j;
+                return ;
+            }
         }
     }
 
-    return -1;
+    iNext = -1;
+    jNext = -1;
+    return ;
 
 }
 
@@ -49,23 +61,23 @@ bool solveSudoku(Board& board, int line, int col){
 
 void solveSudoku(Board& board) {
     if(board[0][0] == '.') solveSudoku(board, 0, 0);
-    int next = nextVoidInBoard(board, 0,0);
-    int jStart = next%10;
-    int iStart = (next - jStart)/10;
+
+    int iStart, jStart;
+    nextVoidInBoard(board, 0,0, iStart, jStart);
 
     solveSudoku(board, iStart, jStart);
 }
 
 
 void _testNextVoidInBoard(Board& board){
-    int next = nextVoidInBoard(board, 0,0);
-    int jStart = next%10;
-    int iStart = (next - jStart)/10;
+    int iNext, jNext;
+    nextVoidInBoard(board, 0,0, iNext,jNext);
 
-    cout << iStart << ", " << jStart << endl;
+    cout << iNext << ", " << jNext << endl;
 }
 int main(){
     Board ex1 = {{'5','3','.','.','7','.','.','.','.'},{'6','.','.','1','9','5','.','.','.'},{'.','9','8','.','.','.','.','6','.'},{'8','.','.','.','6','.','.','.','3'},{'4','.','.','8','.','3','.','.','1'},{'7','.','.','.','2','.','.','.','6'},{'.','6','.','.','.','.','2','8','.'},{'.','.','.','4','1','9','.','.','5'},{'.','.','.','.','8','.','.','7','9'}};
+
     /*
     cout << "Solving ..." << endl;
     solveSudoku(ex1);
