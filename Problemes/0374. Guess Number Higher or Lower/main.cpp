@@ -17,7 +17,7 @@ int guess(int num){return 0;}
 int guessNumber(int lower, int upper){
     if(lower==upper) return lower;
 
-    int middle = (lower+upper)/2;
+    int middle = lower + (upper - lower)/2;
 
     int goGuess = guess(middle);
 
