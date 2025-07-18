@@ -4,6 +4,7 @@
 
 using namespace std;
 using Board = vector<vector<char>>;
+
 void printBoard(Board& B){
     string msg = "";
     for(int i=0; i<9; i++){
@@ -22,9 +23,9 @@ void printBoard(Board& B){
     cout << msg << endl;
 }
 
-
 // return the next case which contains '.', starting after what is given
 // give your variables which represent the next i/j
+// -1/-1 if end of board
 void nextVoidInBoard(Board& board, int iStart, int jStart, int &iNext, int &jNext){
     if(iStart == 8){
         for(int j=jStart; j<9; j++){
@@ -55,8 +56,88 @@ void nextVoidInBoard(Board& board, int iStart, int jStart, int &iNext, int &jNex
 
 }
 
+void removeFromVect(vector<char> &possibilities, char v){
+    for(auto it = possibilities.begin(); it != possibilities.end(); ++it) {
+        if (*it == v) {
+            possibilities.erase(it);
+            break; // supprime uniquement la première occurrence
+        }
+    }
+}
+
+// 0-8 -> top left is 0, bottom right is 8
+int whichSquare(int line, int col){
+    return (line/3)*3 + col/3;
+}
+
+vector<char> inSquare(Board &board, int line, int col){
+    int squareID = whichSquare(line, col);
+    vector<char> valInSquare;
+
+    int iStart = 3*(squareID/3);
+    int iEnd = iStart + 3;
+    int jStart = (squareID - (squareID/3)*3)*3;
+    int jEnd = jStart + 3;
+
+    for(int i=iStart; i<iEnd; i++){
+        for(int j=jStart; j<jEnd; j++){
+            if(board[i][j] != '.') valInSquare.push_back(board[i][j]);
+        }
+    }
+
+    return valInSquare;
+}
+void keepPossibilitiesInSquare(Board &board, vector<char> &possibilities, int line, int col){
+    vector<char> square = inSquare(board, line, col);
+
+    for(char v : square){
+        removeFromVect(possibilities, v);
+    }
+}
+void keepPossibilitiesInCol(Board &board, vector<char> &possibilities, int col){
+    for(vector<char> L : board){
+        if(L[col] != '.') removeFromVect(possibilities, L[col]);
+    }
+}
+void keepPossibilitiesInLine(Board &board, vector<char> &possibilities, int line){
+    for(char v : board[line]){
+        if(v != '.') removeFromVect(possibilities, v);
+    }
+}
+void keepGoodPossibilities(Board &board, vector<char> &possibilities, int line, int col){
+    keepPossibilitiesInSquare(board, possibilities, line, col);
+    keepPossibilitiesInLine(board, possibilities, line);
+    keepPossibilitiesInCol(board, possibilities, col);
+}
+
+vector<char> possibilitiesHere(Board& board, int line, int col){
+    vector<char> possibilities(9,'.');
+    for(int i=0; i<9; i++) possibilities[i] = '1'+i;
+
+    keepGoodPossibilities(board, possibilities, line, col);
+
+    return possibilities;
+}
+
+
 bool solveSudoku(Board& board, int line, int col){
-    return true;
+    if(line == -1 && col == -1) return true;
+
+    vector<char> possibilities = possibilitiesHere(board, line, col);
+
+    if(possibilities.empty()) return false;
+
+    int iNext, jNext;
+    nextVoidInBoard(board, line, col, iNext, jNext);
+
+    for(char v : possibilities){
+        board[line][col] = v;
+        if(solveSudoku(board, iNext, jNext)) return true;
+    }
+
+    board[line][col] = '.';
+
+    return false;
 }
 
 void solveSudoku(Board& board) {
@@ -75,6 +156,14 @@ void _testNextVoidInBoard(Board& board){
 
     cout << iNext << ", " << jNext << endl;
 }
+void _testPossibilitiesHere(Board &board, int line, int col){
+    vector<char> possibilities = possibilitiesHere(board, line, col);
+
+    for(char c : possibilities){
+        std::cout << c << " ";
+    }
+    std::cout << std::endl;
+}
 int main(){
     Board ex1 = {{'5','3','.','.','7','.','.','.','.'},{'6','.','.','1','9','5','.','.','.'},{'.','9','8','.','.','.','.','6','.'},{'8','.','.','.','6','.','.','.','3'},{'4','.','.','8','.','3','.','.','1'},{'7','.','.','.','2','.','.','.','6'},{'.','6','.','.','.','.','2','8','.'},{'.','.','.','4','1','9','.','.','5'},{'.','.','.','.','8','.','.','7','9'}};
 
@@ -83,7 +172,9 @@ int main(){
     solveSudoku(ex1);
     */
 
-    _testNextVoidInBoard(ex1);
+    //_testNextVoidInBoard(ex1);
+
+    //_testPossibilitiesHere(ex1, 0,2);
 
     printBoard(ex1);
 
