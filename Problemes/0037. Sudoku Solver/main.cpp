@@ -1,5 +1,6 @@
 #include<iostream>
 #include<vector>
+#include<set>
 
 
 using namespace std;
@@ -54,63 +55,48 @@ void nextVoidInBoard(Board& board, int iStart, int jStart, int &iNext, int &jNex
 
 }
 
-void removeFromVect(vector<char> &possibilities, char v){
-    for(auto it = possibilities.begin(); it != possibilities.end(); ++it) {
-        if (*it == v) {
-            possibilities.erase(it);
-            break; // supprime uniquement la première occurrence
-        }
-    }
-}
 
-// 0-8 -> top left is 0, bottom right is 8
-int whichSquare(int line, int col){
-    return (line/3)*3 + col/3;
-}
+set<char> inSquare(Board &board, int line, int col){
+    set<char> valInSquare;
 
-vector<char> inSquare(Board &board, int line, int col){
-    int squareID = whichSquare(line, col);
-    vector<char> valInSquare;
-
-    int iStart = 3*(squareID/3);
+    int iStart = 3*(line/3);
     int iEnd = iStart + 3;
-    int jStart = (squareID - (squareID/3)*3)*3;
+    int jStart = 3*(col/3);
     int jEnd = jStart + 3;
 
     for(int i=iStart; i<iEnd; i++){
         for(int j=jStart; j<jEnd; j++){
-            if(board[i][j] != '.') valInSquare.push_back(board[i][j]);
+            if(board[i][j] != '.') valInSquare.insert(board[i][j]);
         }
     }
 
     return valInSquare;
 }
-void keepPossibilitiesInSquare(Board &board, vector<char> &possibilities, int line, int col){
-    vector<char> square = inSquare(board, line, col);
+void keepPossibilitiesInSquare(Board &board, set<char> &possibilities, int line, int col){
+    set<char> square = inSquare(board, line, col);
 
     for(char v : square){
-        removeFromVect(possibilities, v);
+        possibilities.erase(v);
     }
 }
-void keepPossibilitiesInCol(Board &board, vector<char> &possibilities, int col){
+void keepPossibilitiesInCol(Board &board, set<char> &possibilities, int col){
     for(vector<char> L : board){
-        if(L[col] != '.') removeFromVect(possibilities, L[col]);
+        if(L[col] != '.') possibilities.erase(L[col]);
     }
 }
-void keepPossibilitiesInLine(Board &board, vector<char> &possibilities, int line){
+void keepPossibilitiesInLine(Board &board, set<char> &possibilities, int line){
     for(char v : board[line]){
-        if(v != '.') removeFromVect(possibilities, v);
+        if(v != '.') possibilities.erase(v);
     }
 }
-void keepGoodPossibilities(Board &board, vector<char> &possibilities, int line, int col){
+void keepGoodPossibilities(Board &board, set<char> &possibilities, int line, int col){
     keepPossibilitiesInSquare(board, possibilities, line, col);
     keepPossibilitiesInLine(board, possibilities, line);
     keepPossibilitiesInCol(board, possibilities, col);
 }
 
-vector<char> possibilitiesHere(Board& board, int line, int col){
-    vector<char> possibilities(9,'.');
-    for(int i=0; i<9; i++) possibilities[i] = '1'+i;
+set<char> possibilitiesHere(Board& board, int line, int col){
+    set<char> possibilities = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
     keepGoodPossibilities(board, possibilities, line, col);
 
@@ -121,7 +107,7 @@ vector<char> possibilitiesHere(Board& board, int line, int col){
 bool solveSudoku(Board& board, int line, int col){
     if(line == -1 && col == -1) return true;
 
-    vector<char> possibilities = possibilitiesHere(board, line, col);
+    set<char> possibilities = possibilitiesHere(board, line, col);
 
     if(possibilities.empty()) return false;
 
