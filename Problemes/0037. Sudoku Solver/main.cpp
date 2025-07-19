@@ -5,6 +5,7 @@
 
 using namespace std;
 using Board = vector<vector<char>>;
+using Possibles = set<char>;
 
 void printBoard(Board& B){
     string msg = "";
@@ -23,6 +24,72 @@ void printBoard(Board& B){
     msg += " ------- ------- -------\n";
     cout << msg << endl;
 }
+
+
+struct BoardCleaner{
+    //don't touch that >:(
+    Possibles INIT_POSSIBLES = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
+
+    vector<vector<Possibles>> possiblesInSquare;
+    vector<Possibles> possiblesInLines;
+    vector<Possibles> possiblesInCols;
+    Board board;
+
+    BoardCleaner(Board &_board) :
+    board(_board),
+    possiblesInLines(vector<Possibles> (INIT_POSSIBLES, 9)),
+    possiblesInCols(vector<Possibles> (INIT_POSSIBLES, 9))
+    {
+        possiblesInSquare = {
+            {INIT_POSSIBLES, INIT_POSSIBLES, INIT_POSSIBLES},
+            {INIT_POSSIBLES, INIT_POSSIBLES, INIT_POSSIBLES},
+            {INIT_POSSIBLES, INIT_POSSIBLES, INIT_POSSIBLES}
+        };
+
+        char vInBoard;
+        for(int line=0; line<9; line++){
+            for(int col=0; col<9; col++){
+                vInBoard = board[line][col];
+                if(vInBoard != '.') updatePossibles(line, col, vInBoard);
+            }
+        }
+    }
+
+    //TODO
+    void revertPossiblesSquares(int line, int col, char vOut){
+        possiblesInSquare[3*(line/3)][3*(col/3)].insert(vOut);
+    }
+    void revertPossiblesCols(int col, char vOut){
+        possiblesInCols[col].insert(vOut);
+    }
+    void revertPossiblesLines(int line, char vOut){
+        possiblesInLines[line].insert(vOut);
+    }
+    void revertPossibles(int line, int col, char vOut){
+        revertPossiblesSquares(line, col, vOut);
+        revertPossiblesLines(line, vOut);
+        revertPossiblesCols(col, vOut);
+    }
+
+    void updatePossiblesSquare(int line, int col, char vAdded){
+        int iSquare = 3*(line/3);
+        int jSquare = 3*(col/3);
+
+        possiblesInSquare[iSquare][jSquare].erase(vAdded);
+    }
+    void updatePossiblesCols(int col, char vAdded){
+        possiblesInCols[col].erase(vAdded);
+    }
+    void updatePossiblesLines(int line, char vAdded){
+        possiblesInLines[line].erase(vAdded);
+    }
+    void updatePossibles(int line, int col, char vAdded){
+        updatePossiblesSquare(line, col, vAdded);
+        updatePossiblesLines(line, vAdded);
+        updatePossiblesCols(col, vAdded);
+    }
+};
+
 
 // return the next case which contains '.', starting after what is given
 // give your variables which represent the next i/j
@@ -107,7 +174,7 @@ set<char> possibilitiesHere(Board& board, int line, int col){
 bool solveSudoku(Board& board, int line, int col){
     if(line == -1 && col == -1) return true;
 
-    set<char> possibilities = possibilitiesHere(board, line, col);
+    set<char> possibilities = possibilitiesHere(board, line, col);// TODO change possibilities with BoardCleaner.
 
     if(possibilities.empty()) return false;
 
@@ -125,10 +192,10 @@ bool solveSudoku(Board& board, int line, int col){
 }
 
 void solveSudoku(Board& board) {
-    if(board[0][0] == '.') solveSudoku(board, 0, 0);
+    //TODO initiate BoardCleaner object here
 
     int iStart, jStart;
-    nextVoidInBoard(board, 0,0, iStart, jStart);
+    nextVoidInBoard(board, 0,-1, iStart, jStart);
 
     solveSudoku(board, iStart, jStart);
 }
