@@ -41,7 +41,7 @@ void nextVoidInBoard(Board& board, int iStart, int jStart, int &iNext, int &jNex
     for(int i=iStart+1; i<9 ;i++){
         for(int j=0; j<9; j++){
             if(board[i][j] == '.'){
-                iNext = iStart;
+                iNext = i;
                 jNext = j;
                 return ;
             }
@@ -176,10 +176,9 @@ int main(){
 
     //_testPossibilitiesHere(ex1, 0,2);
 
-    /*
+
     cout << "Solving ..." << endl;
     solveSudoku(ex1);
-    */
 
     printBoard(ex1);
 
