@@ -1,11 +1,11 @@
 #include<iostream>
 #include<vector>
-#include<set>
-
+#include<bitset>
+#include<array>
 
 using namespace std;
+
 using Board = vector<vector<char>>;
-using Possibles = set<char>;
 
 void printBoard(Board& B){
     string msg = "";
@@ -25,71 +25,94 @@ void printBoard(Board& B){
     cout << msg << endl;
 }
 
+using Possibles = bitset<9>;
 
-struct BoardCleaner{
-    //don't touch that >:(
-    Possibles INIT_POSSIBLES = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
+inline int charToIndex(char c) { return c - '1'; }
+inline char indexToChar(int i) { return '1' + i; }
 
-    vector<vector<Possibles>> possiblesInSquare;
-    vector<Possibles> possiblesInLines;
-    vector<Possibles> possiblesInCols;
-    Board board;
 
-    BoardCleaner(Board &_board) :
-    board(_board),
-    possiblesInLines(vector<Possibles> (INIT_POSSIBLES, 9)),
-    possiblesInCols(vector<Possibles> (INIT_POSSIBLES, 9))
+struct BitsetIterator {
+    const std::bitset<9>& bits;
+    int index = 0;
+
+    BitsetIterator(const std::bitset<9>& b) : bits(b) {
+        // Positionne l'index au premier bit actif
+        while (index < 9 && !bits.test(index)) ++index;
+    }
+
+    bool hasNext() const {
+        return index < 9;
+    }
+
+    char next() {
+        char c = '1' + index;
+        ++index;
+        while (index < 9 && !bits.test(index)) ++index;
+        return c;
+    }
+};
+
+class BoardCleaner {
+public:
+    static constexpr int SIZE = 9;
+
+    vector<vector<char>> board;
+
+    // Possibilités restantes pour chaque ligne, colonne, carré
+    array<Possibles, SIZE> possiblesInLines;
+    array<Possibles, SIZE> possiblesInCols;
+    array<array<Possibles, 3>, 3> possiblesInSquare;
+
+    BoardCleaner(const Board& _board)
+        : board(_board)
     {
-        possiblesInSquare = {
-            {INIT_POSSIBLES, INIT_POSSIBLES, INIT_POSSIBLES},
-            {INIT_POSSIBLES, INIT_POSSIBLES, INIT_POSSIBLES},
-            {INIT_POSSIBLES, INIT_POSSIBLES, INIT_POSSIBLES}
-        };
+        Possibles all;
+        all.set(); // tous les chiffres sont possibles au départ
 
-        char vInBoard;
-        for(int line=0; line<9; line++){
-            for(int col=0; col<9; col++){
-                vInBoard = board[line][col];
-                if(vInBoard != '.') updatePossibles(line, col, vInBoard);
+        possiblesInLines.fill(all);
+        possiblesInCols.fill(all);
+        for (auto& row : possiblesInSquare)
+            row.fill(all);
+
+        // Supprimer les candidats déjà posés
+        for (int line = 0; line < SIZE; ++line) {
+            for (int col = 0; col < SIZE; ++col) {
+                char c = board[line][col];
+                if (c != '.') {
+                    updatePossibles(line, col, c);
+                }
             }
         }
     }
 
-    //TODO
-    void revertPossiblesSquares(int line, int col, char vOut){
-        possiblesInSquare[3*(line/3)][3*(col/3)].insert(vOut);
-    }
-    void revertPossiblesCols(int col, char vOut){
-        possiblesInCols[col].insert(vOut);
-    }
-    void revertPossiblesLines(int line, char vOut){
-        possiblesInLines[line].insert(vOut);
-    }
-    void revertPossibles(int line, int col, char vOut){
-        revertPossiblesSquares(line, col, vOut);
-        revertPossiblesLines(line, vOut);
-        revertPossiblesCols(col, vOut);
+    Possibles getPossibilitiesInXY(int line, int col) const {
+        return possiblesInLines[line]
+             & possiblesInCols[col]
+             & possiblesInSquare[line / 3][col / 3];
     }
 
-    void updatePossiblesSquare(int line, int col, char vAdded){
-        int iSquare = 3*(line/3);
-        int jSquare = 3*(col/3);
+    void updatePossibles(int line, int col, char value) {
+        int idx = charToIndex(value);
+        possiblesInLines[line].reset(idx);
+        possiblesInCols[col].reset(idx);
+        possiblesInSquare[line / 3][col / 3].reset(idx);
+    }
 
-        possiblesInSquare[iSquare][jSquare].erase(vAdded);
+    void revertPossibles(int line, int col, char value) {
+        int idx = charToIndex(value);
+        possiblesInLines[line].set(idx);
+        possiblesInCols[col].set(idx);
+        possiblesInSquare[line / 3][col / 3].set(idx);
     }
-    void updatePossiblesCols(int col, char vAdded){
-        possiblesInCols[col].erase(vAdded);
-    }
-    void updatePossiblesLines(int line, char vAdded){
-        possiblesInLines[line].erase(vAdded);
-    }
-    void updatePossibles(int line, int col, char vAdded){
-        updatePossiblesSquare(line, col, vAdded);
-        updatePossiblesLines(line, vAdded);
-        updatePossiblesCols(col, vAdded);
+
+    void printPossibilities(int line, int col) const {
+        Possibles c = getPossibilitiesInXY(line, col);
+        cout << "Possibles for (" << line << ", " << col << "): ";
+        for (int i = 0; i < 9; ++i)
+            if (c[i]) cout << indexToChar(i) << ' ';
+        cout << '\n';
     }
 };
-
 
 // return the next case which contains '.', starting after what is given
 // give your variables which represent the next i/j
@@ -123,67 +146,26 @@ void nextVoidInBoard(Board& board, int iStart, int jStart, int &iNext, int &jNex
 }
 
 
-set<char> inSquare(Board &board, int line, int col){
-    set<char> valInSquare;
-
-    int iStart = 3*(line/3);
-    int iEnd = iStart + 3;
-    int jStart = 3*(col/3);
-    int jEnd = jStart + 3;
-
-    for(int i=iStart; i<iEnd; i++){
-        for(int j=jStart; j<jEnd; j++){
-            if(board[i][j] != '.') valInSquare.insert(board[i][j]);
-        }
-    }
-
-    return valInSquare;
-}
-void keepPossibilitiesInSquare(Board &board, set<char> &possibilities, int line, int col){
-    set<char> square = inSquare(board, line, col);
-
-    for(char v : square){
-        possibilities.erase(v);
-    }
-}
-void keepPossibilitiesInCol(Board &board, set<char> &possibilities, int col){
-    for(vector<char> L : board){
-        if(L[col] != '.') possibilities.erase(L[col]);
-    }
-}
-void keepPossibilitiesInLine(Board &board, set<char> &possibilities, int line){
-    for(char v : board[line]){
-        if(v != '.') possibilities.erase(v);
-    }
-}
-void keepGoodPossibilities(Board &board, set<char> &possibilities, int line, int col){
-    keepPossibilitiesInSquare(board, possibilities, line, col);
-    keepPossibilitiesInLine(board, possibilities, line);
-    keepPossibilitiesInCol(board, possibilities, col);
-}
-
-set<char> possibilitiesHere(Board& board, int line, int col){
-    set<char> possibilities = {'1', '2', '3', '4', '5', '6', '7', '8', '9'};
-
-    keepGoodPossibilities(board, possibilities, line, col);
-
-    return possibilities;
-}
-
-
-bool solveSudoku(Board& board, int line, int col){
+bool solveSudoku(Board& board, BoardCleaner &bc, int line, int col){
     if(line == -1 && col == -1) return true;
 
-    set<char> possibilities = possibilitiesHere(board, line, col);// TODO change possibilities with BoardCleaner.
+    Possibles possibilities = bc.getPossibilitiesInXY(line ,col);
 
-    if(possibilities.empty()) return false;
+    if(possibilities.none()) return false;
 
     int iNext, jNext;
     nextVoidInBoard(board, line, col, iNext, jNext);
 
-    for(char v : possibilities){
+    // go through all the possibilities
+    char v;
+    BitsetIterator it(possibilities);
+    while(it.hasNext()){
+        v = it.next();
+
         board[line][col] = v;
-        if(solveSudoku(board, iNext, jNext)) return true;
+        bc.updatePossibles(line, col, v);
+        if(solveSudoku(board, bc, iNext, jNext)) return true;
+        bc.revertPossibles(line, col, v);
     }
 
     board[line][col] = '.';
@@ -192,12 +174,12 @@ bool solveSudoku(Board& board, int line, int col){
 }
 
 void solveSudoku(Board& board) {
-    //TODO initiate BoardCleaner object here
+    BoardCleaner bc(board);
 
     int iStart, jStart;
     nextVoidInBoard(board, 0,-1, iStart, jStart);
 
-    solveSudoku(board, iStart, jStart);
+    solveSudoku(board, bc, iStart, jStart);
 }
 
 
@@ -213,14 +195,6 @@ void _testNextVoidInBoard(Board& board){
 
 
 
-}
-void _testPossibilitiesHere(Board &board, int line, int col){
-    vector<char> possibilities = possibilitiesHere(board, line, col);
-
-    for(char c : possibilities){
-        std::cout << c << " ";
-    }
-    std::cout << std::endl;
 }
 int main(){
     Board ex1 = {{'5','3','.','.','7','.','.','.','.'},{'6','.','.','1','9','5','.','.','.'},{'.','9','8','.','.','.','.','6','.'},{'8','.','.','.','6','.','.','.','3'},{'4','.','.','8','.','3','.','.','1'},{'7','.','.','.','2','.','.','.','6'},{'.','6','.','.','.','.','2','8','.'},{'.','.','.','4','1','9','.','.','5'},{'.','.','.','.','8','.','.','7','9'}};
